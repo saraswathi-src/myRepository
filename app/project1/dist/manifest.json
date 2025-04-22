@@ -1,0 +1,221 @@
+{
+    "_version": "1.65.0",
+    "sap.app": {
+        "id": "project1",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:lrop",
+            "version": "1.17.3",
+            "toolsId": "662e40a6-09f8-4e8e-b71f-368b516d0191"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "odata/v4/catalog-/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "odataVersion": "4.0"
+                }
+            }
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "story-display": {
+                    "semanticObject": "story",
+                    "action": "display",
+                    "title": "{{story-display.flpTitle}}",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.134.1",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.fe.templates": {},
+                "sap.f": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "project1.i18n.i18n"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "resources": {
+            "css": []
+        },
+        "routing": {
+            "config": {
+                "flexibleColumnLayout": {
+                    "defaultTwoColumnLayoutType": "TwoColumnsBeginExpanded",
+                    "defaultThreeColumnLayoutType": "ThreeColumnsMidExpanded"
+                },
+                "routerClass": "sap.f.routing.Router"
+            },
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "storyList",
+                    "target": [
+                        "storyList"
+                    ]
+                },
+                {
+                    "pattern": "story({key}):?query:",
+                    "name": "storyObjectPage",
+                    "target": [
+                        "storyList",
+                        "storyObjectPage"
+                    ]
+                },
+                {
+                    "pattern": "story({key})/storytotask({key2}):?query:",
+                    "name": "taskObjectPage",
+                    "target": [
+                        "storyList",
+                        "storyObjectPage",
+                        "taskObjectPage"
+                    ]
+                }
+            ],
+            "targets": {
+                "storyList": {
+                    "type": "Component",
+                    "id": "storyList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/story",
+                            "variantManagement": "Page",
+                            "navigation": {
+                                "story": {
+                                    "detail": {
+                                        "route": "storyObjectPage"
+                                    }
+                                }
+                            },
+                            "controlConfiguration": {
+                                "@com.sap.vocabularies.UI.v1.LineItem": {
+                                    "tableSettings": {
+                                        "type": "ResponsiveTable"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "controlAggregation": "beginColumnPages",
+                    "contextPattern": ""
+                },
+                "storyObjectPage": {
+                    "type": "Component",
+                    "id": "storyObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/story",
+                            "navigation": {
+                                "storytotask": {
+                                    "detail": {
+                                        "route": "taskObjectPage"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "controlAggregation": "midColumnPages",
+                    "contextPattern": "/story({key})"
+                },
+                "taskObjectPage": {
+                    "type": "Component",
+                    "id": "taskObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/story/storytotask"
+                        }
+                    },
+                    "controlAggregation": "endColumnPages",
+                    "contextPattern": "/story({key})/storytotask({key2})"
+                }
+            }
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "project1.ext.controller.Story"
+                    },
+                    "sap.fe.templates.ObjectPage.ObjectPageController#project1::storyObjectPage": {
+                        "controllerName": "project1.ext.controller.ObjectPage"
+                    }
+                }
+            }
+        },
+        "rootView": {
+            "viewName": "sap.fe.templates.RootContainer.view.Fcl",
+            "type": "XML",
+            "async": true,
+            "id": "appRootView"
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": [],
+        "archeType": "transactional"
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "practice"
+    }
+}
