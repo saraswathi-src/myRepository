@@ -1,0 +1,142 @@
+_schema-version: 3.3.0
+ID: Practice
+description: A simple CAP project.
+version: 1.0.0
+modules:
+- name: Practice-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: Practice-db
+  - name: uaa_Practice
+  - name : Practice_Connectivity
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+    instances: 1
+  build-parameters:
+    builder: npm-ci
+- name: Practice-db-deployer
+  type: hdb
+  path: gen/db
+  requires:
+  - name: Practice-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: Practice-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: Practice-destination-service
+    parameters:
+      content-target: true
+  - name: Practice_html_repo_host
+    parameters:
+      service-key:
+        name: Practice_html_repo_host-key
+  - name: uaa_Practice
+    parameters:
+      service-key:
+        name: uaa_Practice-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: practice_Practice_html_repo_host
+          ServiceInstanceName: Practice-html5-app-host-service
+          ServiceKeyName: Practice_html_repo_host-key
+          sap.cloud.service: practice
+        - Authentication: OAuth2UserTokenExchange
+          Name: practice_uaa_Practice
+          ServiceInstanceName: Practice-xsuaa-service
+          ServiceKeyName: uaa_Practice-key
+          sap.cloud.service: practice
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: Practice-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: Practice_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - project1.zip
+      name: project1
+      target-path: resources/
+- name: project1
+  type: html5
+  path: app/project1
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: Practice-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+- name: Practice-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          - Authentication: NoAuthentication
+            HTML5.DynamicDestination: true
+            HTML5.ForwardAuthToken: true
+            Name: Practice-srv-api
+            ProxyType: Internet
+            Type: HTTP
+            URL: ~{srv-api/srv-url}
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: Practice-destination-service
+    service-plan: lite
+  requires:
+  - name: srv-api
+- name: Practice_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: Practice-html5-app-host-service
+    service-plan: app-host
+- name : Practice_Connectivity
+  type : org.cloudfoundry.managed-service
+  parameters:
+    service: connectivity
+    service-plan: lite 
+- name: uaa_Practice
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: Practice-xsuaa-service
+    service-plan: application
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm ci
+    - npx cds build --production
